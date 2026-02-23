@@ -21,6 +21,12 @@ jobs:
     # В action setup-python@v4 передаём параметр — версию Python
       with:
         python-version: 3.12
+    # установим Docker Compose
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+        docker-compose --version        
     # Обновляем pip, устанавливаем flake8 и flake8-isort, 
     # устанавливаем зависимости проекта
     - name: Install dependencies
@@ -28,16 +34,26 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade flake8 flake8-isort setuptools wheel
         pip install -r ./backend/requirements.txt                
-    # Запускаем flake8 и django tests (через docker-compose)
-    - name: Test with flake8 and django tests
-      # Команд стало больше одной; ставим символ | и пишем команды построчно
+    # Запускаем flake8
+    - name: Run flake8
       run: |
         python -m flake8 backend/
+    # Запускаем Docker Compose   
+    - name: Start Docker Compose
+      run: |
         cd backend/
         docker-compose up -d
-        sleep 10
+        # Ждем пока PostgreSQL и другие сервисы запустятся
+        sleep 15
+        docker-compose ps
+    # Запускаем django tests (через docker-compose)    
+    - name: Run Django tests
+      run: |
+        cd backend/
         docker-compose exec -T backend python manage.py test
+    # Останавливаем Docker Compose    
     - name: Stop Docker Compose
       if: always()
       run: |
+        cd backend/
         docker-compose down
