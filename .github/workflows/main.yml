@@ -41,7 +41,6 @@ jobs:
     # Запускаем Docker Compose   
     - name: Start Docker Compose
       run: |
-        cd backend/
         docker-compose -f docker-compose.production.yml up -d
         # Ждем пока PostgreSQL и другие сервисы запустятся
         sleep 15
@@ -49,11 +48,9 @@ jobs:
     # Запускаем django tests (через docker-compose)    
     - name: Run Django tests
       run: |
-        cd backend/
         docker-compose -f docker-compose.production.yml exec -T backend python manage.py test
     # Останавливаем Docker Compose    
     - name: Stop Docker Compose
       if: always()
       run: |
-        cd backend/
         docker-compose -f docker-compose.production.yml down
